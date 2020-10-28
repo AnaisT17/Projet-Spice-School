@@ -1,4 +1,26 @@
 from django.db import models
+from django.db.models import PositiveIntegerField
+
+A = "Débutante enthousiaste"
+B = "Débutante avancée"
+C = "Apprenante initiatique"
+D = "Experte créative"
+
+PASS = "PASS"
+FAIL = "FAIL"
+
+GRADE = (
+    (A, "Débutante enthousiaste"),
+    (B, "Débutante avancée"),
+    (C, "Apprenante initiatique"),
+    (D, "Experte créative")
+
+)
+
+REMARKS = (
+    (PASS, "PASS"),
+    (FAIL, "FAIL")
+)
 
 
 class User_Roles(AbstractUser):
@@ -207,10 +229,67 @@ class Levels(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculties, on_delete=models.CASCADE)
     department = models.ForeignKey(Departments, on_delete=models.CASCADE)
-    next_semester_begins = models.DateField(auto_now=False, auto_now_add=False, blank = True, null=True)
+    level_description = models.TextField()
+    level_status = models.BooleanField(default=False)
     created_at = models.DateField(auto_now=True, auto_now_add=True)
     updated_at = models.DateField(auto_now=True, auto_now_add=True)
     objects = models.Manager()
 
     def __str__(self):
-        return self.semester_name
+        return self.level
+
+class Classes(models.Model):
+    class_name = models.CharField(max_length=150)
+    class_code = models.ForeignKey(Courses, on_delete=models.CASCADE)
+    class_status = models.BooleanField(default=False)
+    created_at = models.DateField(auto_now=True, auto_now_add=True)
+    updated_at = models.DateField(auto_now=True, auto_now_add=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        return self.class_name
+
+
+class Students(models.Model):
+    role = models.OneToOneField(User_Roles, on_delete=models.CASCADE)
+    level = models.ForeignKey(Levels, on_delete=models.CASCADE)
+    created_at = models.DateField(auto_now=True, auto_now_add=True)
+    updated_at = models.DateField(auto_now=True, auto_now_add=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        if self.role.first_name and self.role.last_name:
+            full_name = self.role.first_name + " " + self.role.self_name
+        return full_name
+
+class Roll(models.Model):
+    student = models.ForeignKey(Students, on_delete=models.CASCADE)
+    roll_no = models.CharField(max_length=150)
+    created_at = models.DateField(auto_now=True, auto_now_add=True)
+    updated_at = models.DateField(auto_now=True, auto_now_add=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        return self.roll_no
+
+
+
+class TakenSubjects(object):
+    student = models.ForeignKey(User_Roles, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    ca = models.PositiveIntegerField(blank=True, null=True, default=0)
+    exam = models.PositiveIntegerField(blank=True, null=True, default=0)
+    total = models.PositiveIntegerField(blank=True, null=True, default=0)
+    grade = models.CharField(choices=GRADE,max_length=5, blank=True, null=True)
+    remarks = models.CharField(choices=REMARKS,max_length=5, blank=True, null=True)
+    
+    def get_total(self, ca, exam):
+        total = int(ca) + int(exam)
+        if total >= 70:
+            grade = D
+        elif total >= 60:
+            grade = C
+        elif total >= 50:
+            grade = B
+        elif total >= 40 : 
+            grade = A
