@@ -291,5 +291,76 @@ class TakenSubjects(object):
             grade = C
         elif total >= 50:
             grade = B
-        elif total >= 40 : 
+        else : 
             grade = A
+        
+        return grade
+
+    def get_remarks(self, grade):
+        if not grade == "A":
+            remarks = PASS
+        else :
+            remarks = FAIL
+
+        return remarks
+
+    def get_repart_students(self, grade):
+        if grade == "A":
+            RepeatStudent.objects.get_or_create(student=self.student, subject=self.subject)
+        else :
+            try : 
+                RepeatStudent.objects.get(student=self.student, subject=self.subject).delete()
+
+            except:
+                pass
+    def is_repeating(self):
+        count = RepeatStudent.objects.filter(student_id = self.student.id)
+        unites = 0
+
+        for i in count : 
+            unites += int(i.subject.subject_unite)
+        if count.count() >= 6 or unites >= 16:
+            RepeatStudent.objects.get_or_create(student=self.student, level=self.student.level)
+        else:
+            try:
+                RepeatStudent.objects.get_or_create(student=self.student, level=self.student.level).delete()
+            except:
+                pass
+    
+    def calculate_gpa(self, total_unite_semester):
+        current_semester = Semester.objects.get(is_current_semester=True)
+        student = TakenSubjects.objects.filter(student=self.student, level=self.student.level, semester=current_semester)
+
+        p = 0
+        point = 0
+
+        for i in student:
+            subjectUnite = i.subject_unite
+
+            if i.grade == D :
+                point = 5
+            elif i.grade == C :
+                point = 4
+            elif i.grade == B :
+                point = 3
+            else:
+                point = 2
+            
+            p += int(subjectUnite)* point
+        
+        try:
+            gpa = (p / total_unite_semester)
+
+            return round(gpa, 1)
+        except:
+            pass
+
+class RepeatStudent (models.Model):
+    student = models.ForeignKey(User_Roles, on_delete=models.CASCADE)
+    subjects = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    level = models.ForeignKey(Levels, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.class_name
