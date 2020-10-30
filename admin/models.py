@@ -346,14 +346,41 @@ class TakenSubjects(object):
             else:
                 point = 2
             
-            p += int(subjectUnite)* point
+            p += int(subjectUnite) * point
         
         try:
             gpa = (p / total_unite_semester)
 
             return round(gpa, 1)
-        except:
-            pass
+        except ZeroDivisionError:
+            return 0
+    
+    def calculate_cgpa(self):
+        current_semester = Semester.objects.get(is_current_semester=True)
+        previousResult = Result.objects.filter(student_id=self.student.id, level_lt=self.student.level)
+        previousCGPA = 0
+
+        for i in previousResult :
+            if i.cpga is not None:
+                previousCGPA += i.cgpa
+        cgpa = 0
+
+        if int(current_semester) == Semester.semester_name:
+            try:
+                first_semester_gpa = Result.objects.get(student=self.student.id, semester=self.semester.id, level=self.student.level)
+                first_semester_gpa += first_semester_gpa.gpa.gpa
+            except:
+                second_semester_gpa = 0
+
+                taken_subjects = TakenSubjects.objects.filter(student=self.student.student,level=student.level)
+                TCU = 0
+
+                for i in taken_subjects:
+                    TCU += int(i.subject.subject_unite)
+                cgpa = first_semester_gpa + second_semester_gpa / TCU
+
+                return round(cgpa, 2)
+
 
 class RepeatStudent (models.Model):
     student = models.ForeignKey(User_Roles, on_delete=models.CASCADE)
@@ -361,6 +388,3 @@ class RepeatStudent (models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     session = models.ForeignKey(Session, on_delete=models.CASCADE)
     level = models.ForeignKey(Levels, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.class_name
