@@ -388,3 +388,4 @@ class RepeatStudent (models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     session = models.ForeignKey(Session, on_delete=models.CASCADE)
     level = models.ForeignKey(Levels, on_delete=models.CASCADE)
+
